@@ -1,0 +1,72 @@
+import React from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { Colors } from '@/constants/theme';
+
+interface CoinCardProps {
+  name: string;
+  symbol: string;
+  price: number;
+  iconUrl: string;
+  change: number;
+}
+
+export const CoinCard: React.FC<CoinCardProps> = ({ name, symbol, price, iconUrl, change }) => {
+  return (
+    <View style={styles.card}>
+      <Image source={{ uri: iconUrl }} style={styles.icon} />
+      <View style={styles.info}>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.symbol}>{symbol}</Text>
+      </View>
+      <View style={styles.priceSection}>
+        <Text style={styles.price}>${price.toLocaleString()}</Text>
+        <Text style={[styles.change, { color: change >= 0 ? Colors.dark.accent : '#FF4B4B' }]}>{change >= 0 ? '+' : ''}{change}%</Text>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.dark.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  icon: {
+    width: 40,
+    height: 40,
+    marginRight: 14,
+  },
+  info: {
+    flex: 1,
+  },
+  name: {
+    color: Colors.dark.text,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  symbol: {
+    color: '#7A869A',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  priceSection: {
+    alignItems: 'flex-end',
+  },
+  price: {
+    color: Colors.dark.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  change: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+});

@@ -1,98 +1,98 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, ScrollView, ActivityIndicator, Text } from 'react-native';
+import { BalanceCard } from '@/components/ui/BalanceCard';
+import { ActionButtons } from '@/components/ui/ActionButtons';
+import { MarketList } from '@/components/ui/MarketList';
+import { fetchMarketData } from '@/services/coingecko';
+import { Colors } from '@/constants/theme';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [coins, setCoins] = useState([]);
+  const [balance, setBalance] = useState(12450.89); // Placeholder
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await fetchMarketData();
+        setCoins(
+          data.map((coin: any) => ({
+            id: coin.id,
+            name: coin.name,
+            symbol: coin.symbol.toUpperCase(),
+            price: coin.current_price,
+            iconUrl: coin.image,
+            change: coin.price_change_percentage_24h?.toFixed(2) ?? 0,
+          }))
+        );
+      } catch (e) {
+        setError('Failed to load market data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.brand}>Rotech</Text>
+      <BalanceCard balance={balance} />
+      <ActionButtons />
+      <Text style={styles.sectionTitle}>Market</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.dark.accent} style={{ marginTop: 30 }} />
+      ) : error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : (
+        <MarketList coins={coins} />
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.dark.background,
   },
-  stepContainer: {
-    gap: 8,
+  content: {
+    padding: 20,
+    paddingTop: 60,
+  },
+  brand: {
+    color: Colors.dark.accent,
+    fontSize: 28,
+    fontWeight: 'bold',
+    letterSpacing: 1.5,
+    marginBottom: 18,
+  },
+  sectionTitle: {
+    color: Colors.dark.text,
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 18,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  error: {
+    color: '#FF4B4B',
+    fontSize: 16,
+    marginTop: 30,
+    textAlign: 'center',
+  },
+
+  cardTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+
+  cardPrice: {
+    color: '#00D09E',
+    fontSize: 22,
+    marginTop: 10,
   },
 });

@@ -5,25 +5,34 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+
+// Rotech custom theme colors
+const tintColorLight = '#00D09E'; // Accent Green
+const tintColorDark = '#00D09E';
+const backgroundDark = '#0B0F19';
+const cardDark = '#151B2D';
+const accentGreen = '#00D09E';
 
 export const Colors = {
   light: {
-    text: '#11181C',
+    text: '#ECEDEE',
     background: '#fff',
     tint: tintColorLight,
-    icon: '#687076',
+    icon: '#00D09E',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    card: '#F5F6FA',
+    accent: accentGreen,
   },
   dark: {
     text: '#ECEDEE',
-    background: '#151718',
+    background: backgroundDark,
     tint: tintColorDark,
-    icon: '#9BA1A6',
+    icon: accentGreen,
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    card: cardDark,
+    accent: accentGreen,
   },
 };
 
