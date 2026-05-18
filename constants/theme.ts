@@ -16,6 +16,7 @@ const accentGreen = '#00D09E';
 export const Colors = {
   light: {
     text: '#ECEDEE',
+    textSecondary: '#687076',
     background: '#fff',
     tint: tintColorLight,
     icon: '#00D09E',
@@ -23,9 +24,11 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     card: '#F5F6FA',
     accent: accentGreen,
+    border: '#E0E0E0',
   },
   dark: {
     text: '#ECEDEE',
+    textSecondary: '#9BA1A6',
     background: backgroundDark,
     tint: tintColorDark,
     icon: accentGreen,
@@ -33,6 +36,7 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     card: cardDark,
     accent: accentGreen,
+    border: '#2A3447',
   },
 };
 

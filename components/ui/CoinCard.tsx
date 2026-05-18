@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
 import { Colors } from '@/constants/theme';
+import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 interface CoinCardProps {
   name: string;
@@ -34,10 +34,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
   },
   icon: {
     width: 40,

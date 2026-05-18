@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface BalanceCardProps {
   balance: number;
@@ -21,10 +21,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.12)',
     alignItems: 'center',
   },
   label: {

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Colors } from '@/constants/theme';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconSymbol } from './icon-symbol';
 
 interface ActionButtonProps {
@@ -47,10 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.08)',
   },
   label: {
     color: Colors.dark.text,
