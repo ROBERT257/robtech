@@ -1,10 +1,13 @@
 
+
 import { useAuth } from '@/contexts/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function WalletScreen() {
+
   const { token } = useAuth();
   const [balance, setBalance] = useState<string>('');
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -34,23 +37,31 @@ export default function WalletScreen() {
   }, [token]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Wallet</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.headerRow}>
+        <Ionicons name="wallet" size={48} color="#7ed957" style={{ marginRight: 12 }} />
+        <View>
+          <Text style={styles.title}>Wallet</Text>
+          <Text style={styles.balance}>{balance} RT</Text>
+        </View>
+      </View>
       {loading ? (
         <ActivityIndicator color="#fff" style={{ marginTop: 24 }} />
       ) : error ? (
         <Text style={styles.error}>{error}</Text>
       ) : (
         <>
-          <Text style={styles.balance}>Balance: {balance} RT</Text>
           <Text style={styles.section}>Transactions</Text>
           <FlatList
             data={transactions}
             keyExtractor={item => item.id}
             renderItem={({ item }) => (
               <View style={styles.txCard}>
-                <Text style={styles.txType}>{item.transaction_type}</Text>
-                <Text style={styles.txAmount}>{item.amount} RT</Text>
+                <View style={styles.txRow}>
+                  <Ionicons name="swap-horizontal" size={20} color="#7ed957" style={{ marginRight: 8 }} />
+                  <Text style={styles.txType}>{item.transaction_type}</Text>
+                  <Text style={styles.txAmount}>{item.amount} RT</Text>
+                </View>
                 <Text style={styles.txDesc}>{item.description}</Text>
                 <Text style={styles.txDate}>{new Date(item.created_at).toLocaleString()}</Text>
               </View>
@@ -59,9 +70,10 @@ export default function WalletScreen() {
           />
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }
+
 
 
 
@@ -69,21 +81,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B0F19',
-    alignItems: 'center',
+  },
+  content: {
+    padding: 20,
     paddingTop: 40,
-    paddingHorizontal: 12,
+    alignItems: 'stretch',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
   },
   title: {
     color: 'white',
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 16,
   },
   balance: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 16,
+    color: '#7ed957',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 2,
   },
   section: {
     color: '#fff',
@@ -94,14 +112,21 @@ const styles = StyleSheet.create({
   },
   txCard: {
     backgroundColor: '#1a2233',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
     width: '100%',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.08)',
+    elevation: 1,
   },
-  txType: { color: '#7ed957', fontWeight: 'bold' },
-  txAmount: { color: '#fff', fontSize: 16 },
-  txDesc: { color: '#ccc', fontSize: 12 },
+  txRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  txType: { color: '#7ed957', fontWeight: 'bold', marginRight: 8 },
+  txAmount: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  txDesc: { color: '#ccc', fontSize: 12, marginTop: 2 },
   txDate: { color: '#888', fontSize: 10, marginTop: 2 },
   error: { color: 'red', marginTop: 16 },
   empty: { color: '#ccc', marginTop: 16, textAlign: 'center' },

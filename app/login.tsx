@@ -22,7 +22,11 @@ export default function LoginScreen() {
       await login(username, password);
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message || 'An error occurred during login');
+      if (error.message && error.message.includes('registered')) {
+        Alert.alert('Login Error', 'This user is already registered. Please login or use a different account.');
+      } else {
+        Alert.alert('Login Failed', error.message || 'An error occurred during login');
+      }
     } finally {
       setLoading(false);
     }

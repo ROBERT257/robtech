@@ -13,15 +13,16 @@ interface Coin {
 
 interface MarketListProps {
   coins: Coin[];
+  onCoinPress?: (coin: Coin) => void;
 }
 
-export const MarketList: React.FC<MarketListProps> = ({ coins }) => {
+export const MarketList: React.FC<MarketListProps> = ({ coins, onCoinPress }) => {
   return (
     <View style={styles.container}>
       <FlatList
         data={coins}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <CoinCard {...item} />}
+        renderItem={({ item }) => <CoinCard {...item} onPress={onCoinPress ? () => onCoinPress(item) : undefined} />}
         showsVerticalScrollIndicator={false}
       />
     </View>

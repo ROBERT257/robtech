@@ -49,7 +49,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         user.set_password(password)
         user.generate_referral_code()
+        
+        # Give 150 RT as registration bonus
+        from decimal import Decimal
+        user.wallet_balance = Decimal('150')
         user.save()
+        
+        # Create transaction record for registration bonus
+        from wallet.models import Transaction
+        Transaction.objects.create(
+            user=user,
+            amount=Decimal('150'),
+            transaction_type='adjustment',
+            description='Registration bonus',
+            balance_after=user.wallet_balance
+        )
+        
         return user
 
 

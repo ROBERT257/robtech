@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 interface User {
   id: string;
@@ -18,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string, referralCode?: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (navigation?: any) => Promise<void>;
   refreshToken: () => Promise<void>;
 }
 
@@ -118,13 +119,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = async () => {
+  const logout = async (router?: any) => {
     try {
       await AsyncStorage.removeItem(TOKEN_KEY);
       await AsyncStorage.removeItem(USER_KEY);
       setToken(null);
       setUser(null);
+      let navigated = false;
+      // Support both expo-router and React Navigation
+      if (router && typeof router.replace === 'function') {
+        // expo-router
+        router.replace('/landing');
+        navigated = true;
+      } else if (router && typeof router.reset === 'function') {
+        // React Navigation
+        router.reset({ index: 0, routes: [{ name: 'landing' }] });
+        navigated = true;
+      } else if (router && typeof router.navigate === 'function') {
+        // React Navigation
+        router.navigate('landing');
+        navigated = true;
+      }
+      Alert.alert('Logged out', 'You have been logged out successfully.');
+      if (!navigated && typeof window !== 'undefined') {
+        // fallback: reload app (web)
+        window.location.href = '/landing';
+      }
     } catch (error) {
+      Alert.alert('Logout Error', 'An error occurred during logout. Please try again.');
       console.error('Error during logout:', error);
     }
   };

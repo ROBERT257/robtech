@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Colors } from '@/constants/theme';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { IconSymbol } from './icon-symbol';
 
 interface ClaimHistoryItem {
@@ -15,14 +15,7 @@ interface ClaimHistoryProps {
 }
 
 export const ClaimHistory: React.FC<ClaimHistoryProps> = ({ history = [] }) => {
-  // Default mock data
-  const defaultHistory: ClaimHistoryItem[] = [
-    { id: '1', amount: 100, date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), status: 'completed' },
-    { id: '2', amount: 100, date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), status: 'completed' },
-    { id: '3', amount: 100, date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000), status: 'completed' },
-  ];
-
-  const displayHistory = history.length > 0 ? history : defaultHistory;
+  const displayHistory = history;
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -32,20 +25,24 @@ export const ClaimHistory: React.FC<ClaimHistoryProps> = ({ history = [] }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Claim History</Text>
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {displayHistory.map((item) => (
-          <View key={item.id} style={styles.historyItem}>
-            <View style={styles.iconContainer}>
-              <IconSymbol name="check-circle" size={20} color={Colors.dark.accent} />
+        {displayHistory.length > 0 ? (
+          displayHistory.map((item) => (
+            <View key={item.id} style={styles.historyItem}>
+              <View style={styles.iconContainer}>
+                <IconSymbol name="check-circle" size={20} color={Colors.dark.accent} />
+              </View>
+              <View style={styles.itemDetails}>
+                <Text style={styles.itemAmount}>+{item.amount} RT</Text>
+                <Text style={styles.itemDate}>{formatDate(item.date)}</Text>
+              </View>
+              <View style={[styles.statusBadge, item.status === 'completed' && styles.statusCompleted]}>
+                <Text style={styles.statusText}>{item.status}</Text>
+              </View>
             </View>
-            <View style={styles.itemDetails}>
-              <Text style={styles.itemAmount}>+{item.amount} RT</Text>
-              <Text style={styles.itemDate}>{formatDate(item.date)}</Text>
-            </View>
-            <View style={[styles.statusBadge, item.status === 'completed' && styles.statusCompleted]}>
-              <Text style={styles.statusText}>{item.status}</Text>
-            </View>
-          </View>
-        ))}
+          ))
+        ) : (
+          <Text style={styles.emptyText}>No claim history yet</Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -102,5 +99,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  emptyText: {
+    color: '#7A869A',
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });

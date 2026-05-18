@@ -52,14 +52,18 @@ class Claim(models.Model):
 
     @classmethod
     def can_claim(cls, user):
-        """Check if user can claim this week"""
+        """Check if user can claim this week or for the first time"""
         if not user.is_registered:
             return False, "User not registered"
-        
+
+        # If user has never claimed before, allow first claim
+        if not cls.objects.filter(user=user).exists():
+            return True, "First claim available for new user"
+
         now = timezone.now()
         current_week = now.isocalendar()[1]
         current_year = now.year
-        
+
         # Check if already claimed this week
         if cls.objects.filter(
             user=user,
@@ -68,7 +72,7 @@ class Claim(models.Model):
             status='approved'
         ).exists():
             return False, "Already claimed this week"
-        
+
         # Check if there's a pending claim
         if cls.objects.filter(
             user=user,
@@ -77,5 +81,5 @@ class Claim(models.Model):
             status='pending'
         ).exists():
             return False, "Claim already pending"
-        
+
         return True, "Can claim"

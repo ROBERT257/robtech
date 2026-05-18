@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 
 interface CoinCardProps {
   name: string;
@@ -8,11 +8,12 @@ interface CoinCardProps {
   price: number;
   iconUrl: string;
   change: number;
+  onPress?: () => void;
 }
 
-export const CoinCard: React.FC<CoinCardProps> = ({ name, symbol, price, iconUrl, change }) => {
+export const CoinCard: React.FC<CoinCardProps> = ({ name, symbol, price, iconUrl, change, onPress }) => {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <Image source={{ uri: iconUrl }} style={styles.icon} />
       <View style={styles.info}>
         <Text style={styles.name}>{name}</Text>
@@ -22,7 +23,7 @@ export const CoinCard: React.FC<CoinCardProps> = ({ name, symbol, price, iconUrl
         <Text style={styles.price}>${price.toLocaleString()}</Text>
         <Text style={[styles.change, { color: change >= 0 ? Colors.dark.accent : '#FF4B4B' }]}>{change >= 0 ? '+' : ''}{change}%</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
