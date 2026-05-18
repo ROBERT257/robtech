@@ -29,6 +29,8 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
     }
   };
 
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -39,6 +41,8 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24 },

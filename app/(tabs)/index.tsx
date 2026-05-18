@@ -1,11 +1,15 @@
 import { ActionButtons } from '@/components/ui/ActionButtons';
 import { BalanceCard } from '@/components/ui/BalanceCard';
 import { MarketList } from '@/components/ui/MarketList';
+import { ClaimButton } from '@/components/ui/ClaimButton';
+import { ClaimCountdown } from '@/components/ui/ClaimCountdown';
+import { ClaimHistory } from '@/components/ui/ClaimHistory';
 import { Colors } from '@/constants/theme';
 import { fetchMarketData } from '@/services/coingecko';
 import { pingBackend } from '@/services/ping';
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
 
 export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
@@ -13,6 +17,10 @@ export default function HomeScreen() {
   const [coins, setCoins] = useState([]);
   const [balance, setBalance] = useState(12450.89); // Placeholder
   const [backendStatus, setBackendStatus] = useState('');
+  // Claim feature state
+  const [claimStatus, setClaimStatus] = useState<any>(null);
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [claimHistory, setClaimHistory] = useState<any[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -44,9 +52,44 @@ export default function HomeScreen() {
         setBackendStatus('Backend not reachable');
       }
     };
+    const fetchClaimStatus = async () => {
+      try {
+        const res = await axios.get('http://127.0.0.1:8000/api/claims/status/', { withCredentials: true });
+        setClaimStatus(res.data);
+      } catch (e) {
+        setClaimStatus(null);
+      }
+    };
+    const fetchClaimHistory = async () => {
+      try {
+        const res = await axios.get('http://127.0.0.1:8000/api/claims/list/', { withCredentials: true });
+        setClaimHistory(res.data);
+      } catch (e) {
+        setClaimHistory([]);
+      }
+    };
     loadData();
     checkBackend();
+    fetchClaimStatus();
+    fetchClaimHistory();
   }, []);
+
+  const handleClaim = async () => {
+    setClaimLoading(true);
+    try {
+      const res = await axios.post('http://127.0.0.1:8000/api/claims/create/', {}, { withCredentials: true });
+      Alert.alert('Success', res.data.message || 'Claim submitted!');
+      // Refresh claim status and history
+      const statusRes = await axios.get('http://127.0.0.1:8000/api/claims/status/', { withCredentials: true });
+      setClaimStatus(statusRes.data);
+      const histRes = await axios.get('http://127.0.0.1:8000/api/claims/list/', { withCredentials: true });
+      setClaimHistory(histRes.data);
+    } catch (e: any) {
+      Alert.alert('Error', e.response?.data?.error || 'Claim failed');
+    } finally {
+      setClaimLoading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -56,6 +99,31 @@ export default function HomeScreen() {
       ) : null}
       <BalanceCard balance={balance} />
       <ActionButtons />
+
+      {/* Claim Feature Section */}
+      <View style={{ marginTop: 24, marginBottom: 12 }}>
+        <Text style={styles.sectionTitle}>Weekly Claim</Text>
+        <ClaimButton
+          onPress={handleClaim}
+          loading={claimLoading}
+          canClaim={!!(claimStatus && claimStatus.can_claim)}
+          disabled={claimLoading || !(claimStatus && claimStatus.can_claim)}
+        />
+        <ClaimCountdown
+          nextClaimDate={claimStatus && claimStatus.current_claim && claimStatus.current_claim.created_at
+            ? new Date(new Date(claimStatus.current_claim.created_at).getTime() + 7 * 24 * 60 * 60 * 1000)
+            : undefined}
+        />
+        <ClaimHistory
+          history={claimHistory.map((item: any) => ({
+            id: item.id,
+            amount: Number(item.amount),
+            date: new Date(item.created_at),
+            status: item.status === 'approved' ? 'completed' : 'pending',
+          }))}
+        />
+      </View>
+
       <Text style={styles.sectionTitle}>Market</Text>
       {loading ? (
         <ActivityIndicator size="large" color={Colors.dark.accent} style={{ marginTop: 30 }} />

@@ -13,7 +13,7 @@ export default function Index() {
       if (isAuthenticated) {
         router.replace('/(tabs)');
       } else {
-        router.replace('/register');
+        router.replace('/landing');
       }
     }
   }, [isAuthenticated, isLoading, router]);
