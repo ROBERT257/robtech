@@ -1,15 +1,15 @@
 import { ActionButtons } from '@/components/ui/ActionButtons';
 import { BalanceCard } from '@/components/ui/BalanceCard';
-import { MarketList } from '@/components/ui/MarketList';
 import { ClaimButton } from '@/components/ui/ClaimButton';
 import { ClaimCountdown } from '@/components/ui/ClaimCountdown';
 import { ClaimHistory } from '@/components/ui/ClaimHistory';
+import { MarketList } from '@/components/ui/MarketList';
 import { Colors } from '@/constants/theme';
 import { fetchMarketData } from '@/services/coingecko';
 import { pingBackend } from '@/services/ping';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const [loading, setLoading] = useState(true);

@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 
 export default function WalletScreen() {
   const { token } = useAuth();
