@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/theme';
-import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -17,9 +16,9 @@ export default function ForgotPasswordScreen() {
     }
     setLoading(true);
     try {
-      // Adjust endpoint as needed for your backend
-      await axios.post('http://127.0.0.1:8000/api/auth/password/reset/', { email });
-      setSuccess(true);
+      Alert.alert('Not Implemented', 'Password reset feature is not yet implemented. Please contact support.');
+      // await axios.post('http://127.0.0.1:8081/api/auth/password/reset/', { email });
+      // setSuccess(true);
     } catch (e: any) {
       Alert.alert('Error', e.response?.data?.detail || 'Failed to send reset email');
     } finally {

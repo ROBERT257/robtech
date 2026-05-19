@@ -1,6 +1,6 @@
-import axios from 'axios';
+import api from './api';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/auth';
+const API_BASE_URL = '/auth';
 
 export interface LoginCredentials {
   username: string;
@@ -30,28 +30,24 @@ export interface AuthResponse {
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await axios.post(`${API_BASE_URL}/login/`, credentials);
+    const response = await api.post(`${API_BASE_URL}/login/`, credentials);
     return response.data;
   },
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    const response = await axios.post(`${API_BASE_URL}/register/`, credentials);
+    const response = await api.post(`${API_BASE_URL}/register/`, credentials);
     return response.data;
   },
 
   async refreshToken(refreshToken: string): Promise<{ access: string }> {
-    const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
+    const response = await api.post(`${API_BASE_URL}/token/refresh/`, {
       refresh: refreshToken,
     });
     return response.data;
   },
 
   async getProfile(token: string) {
-    const response = await axios.get(`${API_BASE_URL}/profile/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(`${API_BASE_URL}/profile/`);
     return response.data;
   },
 

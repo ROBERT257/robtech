@@ -6,6 +6,7 @@ import { ClaimHistory } from '@/components/ui/ClaimHistory';
 import { MarketList } from '@/components/ui/MarketList';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/services/api';
 import { fetchMarketData } from '@/services/coingecko';
 import { pingBackend } from '@/services/ping';
 import axios from 'axios';
@@ -57,7 +58,7 @@ export default function HomeScreen() {
     };
     const fetchClaimStatus = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/claims/status/', {
+        const res = await axios.get(`${API_BASE_URL}/claims/status/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setClaimStatus(res.data);
@@ -67,7 +68,7 @@ export default function HomeScreen() {
     };
     const fetchClaimHistory = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/claims/list/', {
+        const res = await axios.get(`${API_BASE_URL}/claims/list/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Claim history response:', res.data);
@@ -83,7 +84,7 @@ export default function HomeScreen() {
     const fetchBalance = async () => {
       try {
         if (!token) return;
-        const res = await axios.get('http://127.0.0.1:8000/api/wallet/balance/', {
+        const res = await axios.get(`${API_BASE_URL}/wallet/balance/`, {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         });
@@ -116,16 +117,16 @@ export default function HomeScreen() {
   const handleClaim = async () => {
     setClaimLoading(true);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/api/claims/create/', {}, {
+      const res = await axios.post(`${API_BASE_URL}/claims/create/`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       Alert.alert('Success', res.data.message || 'Claim submitted!');
       // Refresh claim status and history
-      const statusRes = await axios.get('http://127.0.0.1:8000/api/claims/status/', {
+      const statusRes = await axios.get(`${API_BASE_URL}/claims/status/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setClaimStatus(statusRes.data);
-      const histRes = await axios.get('http://127.0.0.1:8000/api/claims/list/', {
+      const histRes = await axios.get(`${API_BASE_URL}/claims/list/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const histData = histRes.data;
@@ -199,14 +200,18 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-        <ClaimHistory
-          history={Array.isArray(claimHistory) ? claimHistory.map((item: any) => ({
-            id: item.id,
-            amount: Number(item.amount),
-            date: new Date(item.created_at),
-            status: item.status === 'approved' ? 'completed' : 'pending',
-          })) : []}
-        />
+        {claimHistoryError ? (
+          <Text style={{ color: '#FF4B4B', textAlign: 'center', marginTop: 10 }}>{claimHistoryError}</Text>
+        ) : (
+          <ClaimHistory
+            history={(Array.isArray(claimHistory) ? claimHistory : []).map((item: any) => ({
+              id: item.id,
+              amount: Number(item.amount),
+              date: new Date(item.created_at),
+              status: item.status === 'approved' ? 'completed' : 'pending',
+            }))}
+          />
+        )}
       </View>
 
       <Text style={styles.sectionTitle}>Market</Text>

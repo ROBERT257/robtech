@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { API_BASE_URL } from '@/services/api';
 
 interface Referral {
   id: string;
@@ -31,7 +32,7 @@ export default function ProfileScreen() {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/auth/profile/', {
+        const res = await axios.get(`${API_BASE_URL}/auth/profile/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data);
@@ -47,7 +48,7 @@ export default function ProfileScreen() {
       setReferralLoading(true);
       setReferralError('');
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/referrals/made/', {
+        const res = await axios.get(`${API_BASE_URL}/referrals/made/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReferrals(res.data.filter((r: Referral) => r.status === 'approved' || r.status === 'paid'));

@@ -1,10 +1,9 @@
 import { MarketList } from '@/components/ui/MarketList';
-import { Modal, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { fetchMarketData } from '@/services/coingecko';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export default function MarketScreen() {

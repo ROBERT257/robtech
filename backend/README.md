@@ -61,7 +61,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8081`
 
 ## API Endpoints
 
@@ -89,9 +89,9 @@ The API will be available at `http://localhost:8000`
 
 ### Claims
 
-- `GET /api/claims/list/` - List user's claims
-- `POST /api/claims/create/` - Create weekly claim request
-- `GET /api/claims/status/` - Check claim eligibility
+- `GET /api/wallet/claims/history/` - List user's claims
+- `POST /api/wallet/claims/create/` - Create weekly claim request
+- `GET /api/wallet/claims/status/` - Check claim eligibility
 
 ### Wallet
 
@@ -101,7 +101,7 @@ The API will be available at `http://localhost:8000`
 
 ## Admin Dashboard
 
-Access the Django admin dashboard at `http://localhost:8000/admin`
+Access the Django admin dashboard at `http://localhost:8081/admin`
 
 ### Admin Features
 

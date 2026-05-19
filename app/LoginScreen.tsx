@@ -12,7 +12,7 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://127.0.0.1:8000/api/auth/login/', {
+      const res = await axios.post('http://127.0.0.1:8081/api/auth/login/', {
         username,
         password,
       });

@@ -1,6 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import { getItem, removeItem, setItem } from '../utils/safeStorage';
+import { API_BASE_URL } from '../services/api';
 
 interface User {
   id: string;
@@ -39,8 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadAuthData = async () => {
     try {
-      const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
-      const storedUser = await AsyncStorage.getItem(USER_KEY);
+      const storedToken = await getItem(TOKEN_KEY);
+      const storedUser = await getItem(USER_KEY);
       
       if (storedToken && storedUser) {
         setToken(storedToken);
@@ -55,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/login/', {
+      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,8 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         is_verified: data.user?.is_verified || false,
       };
 
-      await AsyncStorage.setItem(TOKEN_KEY, data.access);
-      await AsyncStorage.setItem(USER_KEY, JSON.stringify(userInfo));
+      await setItem(TOKEN_KEY, data.access);
+      await setItem(USER_KEY, JSON.stringify(userInfo));
       
       setToken(data.access);
       setUser(userInfo);
@@ -92,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (username: string, email: string, password: string, referralCode?: string) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/register/', {
+      const response = await fetch(`${API_BASE_URL}/auth/register/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,24 +122,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async (router?: any) => {
     try {
-      await AsyncStorage.removeItem(TOKEN_KEY);
-      await AsyncStorage.removeItem(USER_KEY);
+      await removeItem(TOKEN_KEY);
+      await removeItem(USER_KEY);
       setToken(null);
       setUser(null);
       let navigated = false;
-      // Always use router.replace('/landing') if available
+      // Support both expo-router and React Navigation
       if (router && typeof router.replace === 'function') {
+        // expo-router
         router.replace('/landing');
         navigated = true;
       } else if (router && typeof router.reset === 'function') {
+        // React Navigation
         router.reset({ index: 0, routes: [{ name: 'landing' }] });
         navigated = true;
       } else if (router && typeof router.navigate === 'function') {
+        // React Navigation
         router.navigate('landing');
         navigated = true;
       }
       Alert.alert('Logged out', 'You have been logged out successfully.');
       if (!navigated && typeof window !== 'undefined') {
+        // fallback: reload app (web)
         window.location.href = '/landing';
       }
     } catch (error) {
@@ -149,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshToken = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/token/refresh/', {
+      const response = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Token refresh failed');
       }
 
-      await AsyncStorage.setItem(TOKEN_KEY, data.access);
+      await setItem(TOKEN_KEY, data.access);
       setToken(data.access);
     } catch (error) {
       await logout();

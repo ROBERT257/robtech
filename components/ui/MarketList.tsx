@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { CoinCard } from './CoinCard';
 
 interface Coin {
@@ -19,12 +19,13 @@ interface MarketListProps {
 export const MarketList: React.FC<MarketListProps> = ({ coins, onCoinPress }) => {
   return (
     <View style={styles.container}>
-      <FlatList
-        data={coins}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => <CoinCard {...item} onPress={onCoinPress ? () => onCoinPress(item) : undefined} />}
-        showsVerticalScrollIndicator={false}
-      />
+      {coins.map((item) => (
+        <CoinCard
+          key={item.id}
+          {...item}
+          onPress={onCoinPress ? () => onCoinPress(item) : undefined}
+        />
+      ))}
     </View>
   );
 };

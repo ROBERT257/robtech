@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import React from 'react';
-import { Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CoinCardProps {
   name: string;

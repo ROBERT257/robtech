@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { API_BASE_URL } from '@/services/api';
 
 export default function WalletScreen() {
 
@@ -19,11 +20,11 @@ export default function WalletScreen() {
       setLoading(true);
       setError('');
       try {
-        const balRes = await axios.get('http://127.0.0.1:8000/api/wallet/balance/', {
+        const balRes = await axios.get(`${API_BASE_URL}/wallet/balance/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setBalance(balRes.data.balance);
-        const txRes = await axios.get('http://127.0.0.1:8000/api/wallet/transactions/', {
+        const txRes = await axios.get(`${API_BASE_URL}/wallet/transactions/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTransactions(txRes.data.results || []);
@@ -52,11 +53,9 @@ export default function WalletScreen() {
       ) : (
         <>
           <Text style={styles.section}>Transactions</Text>
-          <FlatList
-            data={transactions}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.txCard}>
+          {transactions.length > 0 ? (
+            transactions.map((item) => (
+              <View key={item.id} style={styles.txCard}>
                 <View style={styles.txRow}>
                   <Ionicons name="swap-horizontal" size={20} color="#7ed957" style={{ marginRight: 8 }} />
                   <Text style={styles.txType}>{item.transaction_type}</Text>
@@ -65,9 +64,10 @@ export default function WalletScreen() {
                 <Text style={styles.txDesc}>{item.description}</Text>
                 <Text style={styles.txDate}>{new Date(item.created_at).toLocaleString()}</Text>
               </View>
-            )}
-            ListEmptyComponent={<Text style={styles.empty}>No transactions yet.</Text>}
-          />
+            ))
+          ) : (
+            <Text style={styles.empty}>No transactions yet.</Text>
+          )}
         </>
       )}
     </ScrollView>
