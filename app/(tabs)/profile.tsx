@@ -1,11 +1,11 @@
 
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { API_BASE_URL } from '@/services/api';
 
 interface Referral {
   id: string;
