@@ -10,7 +10,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ balance }) => {
   return (
     <View style={styles.card}>
       <Text style={styles.label}>Portfolio Balance</Text>
-      <Text style={styles.balance}>${balance.toLocaleString()}</Text>
+      <Text style={styles.balance}>{balance.toLocaleString()} RT</Text>
     </View>
   );
 };

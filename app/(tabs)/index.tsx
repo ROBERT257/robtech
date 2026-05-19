@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const [claimStatus, setClaimStatus] = useState<any>(null);
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimHistory, setClaimHistory] = useState<any[]>([]);
+  const [claimHistoryError, setClaimHistoryError] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -69,10 +70,13 @@ export default function HomeScreen() {
         const res = await axios.get('http://127.0.0.1:8000/api/claims/list/', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Claim history response:', res.data);
         // Handle both direct array and paginated response
         const data = res.data;
         setClaimHistory(Array.isArray(data) ? data : (data.results || []));
-      } catch (e) {
+      } catch (e: any) {
+        console.error('Claim history error:', e.response?.data || e.message);
+        setClaimHistoryError('Failed to load claim history');
         setClaimHistory([]);
       }
     };
@@ -196,12 +200,12 @@ export default function HomeScreen() {
           )}
         </View>
         <ClaimHistory
-          history={(Array.isArray(claimHistory) ? claimHistory : []).map((item: any) => ({
+          history={Array.isArray(claimHistory) ? claimHistory.map((item: any) => ({
             id: item.id,
             amount: Number(item.amount),
             date: new Date(item.created_at),
             status: item.status === 'approved' ? 'completed' : 'pending',
-          }))}
+          })) : []}
         />
       </View>
 

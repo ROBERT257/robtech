@@ -126,23 +126,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(null);
       setUser(null);
       let navigated = false;
-      // Support both expo-router and React Navigation
+      // Always use router.replace('/landing') if available
       if (router && typeof router.replace === 'function') {
-        // expo-router
         router.replace('/landing');
         navigated = true;
       } else if (router && typeof router.reset === 'function') {
-        // React Navigation
         router.reset({ index: 0, routes: [{ name: 'landing' }] });
         navigated = true;
       } else if (router && typeof router.navigate === 'function') {
-        // React Navigation
         router.navigate('landing');
         navigated = true;
       }
       Alert.alert('Logged out', 'You have been logged out successfully.');
       if (!navigated && typeof window !== 'undefined') {
-        // fallback: reload app (web)
         window.location.href = '/landing';
       }
     } catch (error) {
