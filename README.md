@@ -25,6 +25,20 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Connect To A Public Backend
+
+This app reads its API URL from `EXPO_PUBLIC_API_URL`.
+
+For local emulator testing, `http://10.0.2.2:8081/api` still works.
+
+For a real phone or public release, point it at a public HTTPS backend, for example:
+
+```bash
+EXPO_PUBLIC_API_URL=https://api.yourdomain.com/api
+```
+
+After changing it, rebuild the APK so the new URL is bundled into the app.
+
 ## Get a fresh project
 
 When you're ready, run:

@@ -7,3 +7,4 @@ requests==2.31.0
 django-cors-headers==4.3.1
 celery==5.3.6
 redis==5.0.4
+django-jazzmin==3.0.1

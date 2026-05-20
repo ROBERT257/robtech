@@ -15,6 +15,7 @@ _allowed_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lam
 ALLOWED_HOSTS = list(dict.fromkeys(_allowed_hosts + ['10.0.2.2']))
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'accounts',
     'payments',
@@ -47,7 +49,7 @@ ROOT_URLCONF = 'rotech.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -56,6 +58,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'admin_metrics': 'accounts.templatetags.admin_metrics',
+            },
         },
     },
 ]
@@ -94,6 +99,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -144,3 +150,57 @@ REGISTRATION_FEE = 250  # KSH
 
 # Referral reward
 REFERRAL_REWARD = 150  # RT tokens
+
+JAZZMIN_SETTINGS = {
+    'site_title': 'Rotech Admin',
+    'site_header': 'Rotech Control Center',
+    'site_brand': 'Rotech',
+    'site_logo': 'brand/logo.svg',
+    'site_logo_classes': 'img-circle',
+    'site_icon': 'brand/favicon.svg',
+    'welcome_sign': 'Welcome to Rotech Admin Dashboard',
+    'copyright': 'Rotech',
+    'show_sidebar': True,
+    'navigation_expanded': True,
+    'order_with_respect_to': [
+        'accounts',
+        'wallet',
+        'claims',
+        'payments',
+        'referrals',
+    ],
+    'icons': {
+        'accounts': 'fas fa-users-cog',
+        'accounts.User': 'fas fa-user-shield',
+        'wallet': 'fas fa-wallet',
+        'wallet.Transaction': 'fas fa-exchange-alt',
+        'wallet.Payment': 'fas fa-credit-card',
+        'wallet.Claim': 'fas fa-gift',
+        'claims': 'fas fa-coins',
+        'claims.Claim': 'fas fa-hand-holding-usd',
+        'payments': 'fas fa-money-check-alt',
+        'payments.Payment': 'fas fa-receipt',
+        'payments.MpesaCallback': 'fas fa-broadcast-tower',
+        'referrals': 'fas fa-user-friends',
+        'referrals.Referral': 'fas fa-share-alt',
+    },
+    'custom_css': 'brand/admin.css',
+    'show_ui_builder': False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    'theme': 'darkly',
+    'dark_mode_theme': 'darkly',
+    'navbar': 'navbar-dark bg-primary',
+    'sidebar': 'sidebar-dark-primary',
+    'accent': 'accent-info',
+    'brand_colour': 'navbar-primary',
+    'button_classes': {
+        'primary': 'btn btn-info',
+        'secondary': 'btn btn-outline-secondary',
+        'info': 'btn btn-outline-info',
+        'warning': 'btn btn-outline-warning',
+        'danger': 'btn btn-danger',
+        'success': 'btn btn-success',
+    },
+}

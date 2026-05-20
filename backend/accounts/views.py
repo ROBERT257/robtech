@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer
 
@@ -51,3 +53,29 @@ def dashboard_stats(request):
         'referral_count': referral_count,
         'last_claim': user.last_claim,
     })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def logout(request):
+    """Revoke the refresh token if provided and end the client session safely."""
+    refresh_token = request.data.get('refresh_token')
+    revoked = False
+
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            revoked = True
+        except TokenError:
+            revoked = False
+        except Exception:
+            revoked = False
+
+    return Response(
+        {
+            'message': 'Session ended successfully',
+            'revoked': revoked,
+        },
+        status=status.HTTP_200_OK,
+    )

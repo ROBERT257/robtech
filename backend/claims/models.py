@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from datetime import date, timedelta
 import uuid
 
 
@@ -51,35 +52,117 @@ class Claim(models.Model):
             )
 
     @classmethod
+    def get_current_week_claim(cls, user):
+        now = timezone.now()
+        current_week = now.isocalendar()[1]
+        current_year = now.year
+        return cls.objects.filter(user=user, week_number=current_week, year=current_year).order_by('-created_at').first()
+
+    @classmethod
+    def get_latest_claim(cls, user):
+        return cls.objects.filter(user=user).order_by('-created_at').first()
+
+    @classmethod
+    def get_next_claim_at(cls, user):
+        current_claim = cls.get_current_week_claim(user)
+        anchor = None
+
+        if current_claim:
+            anchor = current_claim.approved_at or current_claim.created_at
+        else:
+            latest_claim = cls.get_latest_claim(user)
+            if latest_claim:
+                anchor = latest_claim.approved_at or latest_claim.created_at
+
+        if anchor:
+            return anchor + timedelta(days=7)
+
+        return timezone.now()
+
+    @classmethod
+    def get_streak_count(cls, user):
+        approved_claims = list(
+            cls.objects.filter(user=user, status='approved').order_by('-created_at')
+        )
+
+        valid_claims = []
+        for claim in approved_claims:
+            try:
+                date.fromisocalendar(claim.year, claim.week_number, 1)
+            except ValueError:
+                continue
+            valid_claims.append(claim)
+
+        if not valid_claims:
+            return 0
+
+        streak = 1
+        previous_week_start = date.fromisocalendar(
+            valid_claims[0].year,
+            valid_claims[0].week_number,
+            1,
+        )
+        expected_previous_week = previous_week_start - timedelta(days=7)
+
+        for claim in valid_claims[1:]:
+            claim_week_start = date.fromisocalendar(claim.year, claim.week_number, 1)
+            if claim_week_start == expected_previous_week:
+                streak += 1
+                expected_previous_week -= timedelta(days=7)
+            else:
+                break
+
+        return streak
+
+    @classmethod
+    def get_claim_status_summary(cls, user):
+        current_claim = cls.get_current_week_claim(user)
+        can_claim, message = cls.can_claim(user)
+        claim_amount = current_claim.amount if current_claim else cls._meta.get_field('amount').default
+        pending_review = bool(current_claim and current_claim.status == 'pending')
+        approved_this_week = bool(current_claim and current_claim.status == 'approved')
+
+        if not user.is_registered:
+            claim_state = 'locked'
+        elif pending_review:
+            claim_state = 'pending'
+        elif approved_this_week:
+            claim_state = 'approved'
+        elif can_claim:
+            claim_state = 'available'
+        else:
+            claim_state = 'locked'
+
+        next_claim_at = cls.get_next_claim_at(user)
+
+        return {
+            'can_claim': can_claim,
+            'message': message,
+            'current_claim': current_claim,
+            'next_claim_at': next_claim_at,
+            'claim_amount': str(claim_amount),
+            'pending_review': pending_review,
+            'estimated_review_time': '24 hours',
+            'streak_count': cls.get_streak_count(user),
+            'claim_state': claim_state,
+        }
+
+    @classmethod
     def can_claim(cls, user):
         """Check if user can claim this week or for the first time"""
         if not user.is_registered:
             return False, "User not registered"
 
+        current_claim = cls.get_current_week_claim(user)
+
+        if current_claim and current_claim.status == 'pending':
+            return False, "You already have a pending claim this week"
+
+        if current_claim and current_claim.status == 'approved':
+            return False, f"You already claimed for Week {current_claim.week_number}"
+
         # If user has never claimed before, allow first claim
         if not cls.objects.filter(user=user).exists():
             return True, "First claim available for new user"
-
-        now = timezone.now()
-        current_week = now.isocalendar()[1]
-        current_year = now.year
-
-        # Check if already claimed this week
-        if cls.objects.filter(
-            user=user,
-            week_number=current_week,
-            year=current_year,
-            status='approved'
-        ).exists():
-            return False, "Already claimed this week"
-
-        # Check if there's a pending claim
-        if cls.objects.filter(
-            user=user,
-            week_number=current_week,
-            year=current_year,
-            status='pending'
-        ).exists():
-            return False, "Claim already pending"
 
         return True, "Can claim"

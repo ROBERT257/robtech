@@ -1,11 +1,11 @@
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Referral {
   id: string;
@@ -16,7 +16,7 @@ interface Referral {
 }
 
 export default function ProfileScreen() {
-  const { token, user, logout } = useAuth();
+  const { token, user, logout, isLoggingOut } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,27 @@ export default function ProfileScreen() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [referralError, setReferralError] = useState('');
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('You will need to sign in again to access your account.');
+      if (confirmed) {
+        void logout(router, { reason: 'manual' });
+      }
+      return;
+    }
+
+    Alert.alert('Log out?', 'You will need to sign in again to access your account.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: () => {
+          void logout(router, { reason: 'manual' });
+        },
+      },
+    ]);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -45,13 +66,21 @@ export default function ProfileScreen() {
     if (token) fetchProfile();
     // Fetch referrals
     const fetchReferrals = async () => {
+      if (!token) {
+        setReferrals([]);
+        setReferralError('');
+        setReferralLoading(false);
+        return;
+      }
+
       setReferralLoading(true);
       setReferralError('');
       try {
         const res = await axios.get(`${API_BASE_URL}/referrals/made/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setReferrals(res.data.filter((r: Referral) => r.status === 'approved' || r.status === 'paid'));
+        const data = Array.isArray(res.data) ? res.data : (res.data.results || []);
+        setReferrals(data.filter((r: Referral) => r.status === 'approved' || r.status === 'paid'));
       } catch (e: any) {
         setReferralError('Failed to load referrals');
       } finally {
@@ -114,16 +143,16 @@ export default function ProfileScreen() {
             )}
           </View>
           <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={async () => {
-              Alert.alert('Logout', 'Are you sure you want to logout?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Logout', style: 'destructive', onPress: () => logout(router) },
-              ]);
-            }}
+            style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
+            onPress={handleLogout}
+            disabled={isLoggingOut}
           >
-            <Ionicons name="log-out-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.logoutText}>Logout</Text>
+            {isLoggingOut ? (
+              <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
+            ) : (
+              <Ionicons name="log-out-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
+            )}
+            <Text style={styles.logoutText}>{isLoggingOut ? 'Logging out...' : 'Logout'}</Text>
           </TouchableOpacity>
         </>
       ) : null}
@@ -223,6 +252,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
     flexDirection: 'row',
     justifyContent: 'center',
+  },
+  logoutButtonDisabled: {
+    opacity: 0.75,
   },
   logoutText: {
     color: '#fff',

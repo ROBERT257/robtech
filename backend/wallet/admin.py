@@ -15,12 +15,24 @@ def approve_payments(modeladmin, request, queryset):
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'amount', 'status', 'created_at']
     list_filter = ['status', 'created_at']
+    search_fields = ['user__username', 'mpesa_code']
+    autocomplete_fields = ['user']
+    ordering = ['-created_at']
+    list_per_page = 30
+    list_editable = ['status']
+    date_hierarchy = 'created_at'
     actions = [approve_payments]
 
 @admin.register(Claim)
 class ClaimAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'amount', 'status', 'created_at']
     list_filter = ['status', 'created_at']
+    search_fields = ['user__username']
+    autocomplete_fields = ['user']
+    ordering = ['-created_at']
+    list_per_page = 30
+    list_editable = ['status']
+    date_hierarchy = 'created_at'
 
 
 @admin.register(Transaction)
@@ -29,3 +41,7 @@ class TransactionAdmin(admin.ModelAdmin):
     list_filter = ['transaction_type', 'created_at']
     search_fields = ['user__username', 'reference', 'description']
     readonly_fields = ['id', 'created_at']
+    autocomplete_fields = ['user']
+    ordering = ['-created_at']
+    list_per_page = 50
+    date_hierarchy = 'created_at'

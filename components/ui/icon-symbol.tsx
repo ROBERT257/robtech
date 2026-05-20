@@ -30,6 +30,9 @@ const MAPPING: Record<string, ComponentProps<typeof MaterialIcons>['name']> = {
   'notifications': 'notifications',
   'help': 'help',
   'info': 'info',
+  'clock.fill': 'access-time',
+  'checkmark.circle.fill': 'check-circle',
+  'xmark.circle.fill': 'cancel',
 };
 
 /**

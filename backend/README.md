@@ -41,6 +41,18 @@ Update the following variables:
 - Database credentials
 - M-Pesa API credentials
 
+If you want the mobile app to work outside your LAN, also configure these for your public backend host:
+
+- `ALLOWED_HOSTS`: include your server domain or public IP, for example `api.yourdomain.com`
+- `CORS_ALLOWED_ORIGINS`: include your Expo app origin and any web frontend origin you use
+
+Example:
+
+```bash
+ALLOWED_HOSTS=api.yourdomain.com,localhost,127.0.0.1
+CORS_ALLOWED_ORIGINS=https://app.yourdomain.com,https://api.yourdomain.com
+```
+
 ### 3. Database Setup
 
 ```bash
@@ -62,6 +74,12 @@ python manage.py runserver
 ```
 
 The API will be available at `http://localhost:8081`
+
+For external access, run the server on `0.0.0.0` and place it behind a public host or reverse proxy:
+
+```bash
+python manage.py runserver 0.0.0.0:8081
+```
 
 ## API Endpoints
 
@@ -102,6 +120,28 @@ The API will be available at `http://localhost:8081`
 ## Admin Dashboard
 
 Access the Django admin dashboard at `http://localhost:8081/admin`
+
+### Modern Admin UI Preview
+
+The admin now uses a modern Jazzmin theme with:
+- Sidebar navigation and grouped app sections
+- Dashboard stat cards + analytics chart placeholder
+- Dark mode-friendly color palette
+- Branded header/logo/favicon
+- Improved tables, filters, and forms
+
+Use the project virtual environment to run the backend for consistent dependencies:
+
+```bash
+cd backend
+venv\Scripts\python.exe manage.py runserver 8081
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8081/admin/
+```
 
 ### Admin Features
 

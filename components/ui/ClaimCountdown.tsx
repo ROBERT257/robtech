@@ -1,65 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface ClaimCountdownProps {
-  nextClaimDate?: Date;
+  nextClaimAt?: string | Date | null;
+  canClaim?: boolean;
+  pendingReview?: boolean;
+  claimMessage?: string;
 }
 
-export const ClaimCountdown: React.FC<ClaimCountdownProps> = ({ nextClaimDate }) => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+export const ClaimCountdown: React.FC<ClaimCountdownProps> = ({ nextClaimAt, canClaim = false, pendingReview = false, claimMessage }) => {
+  const [displayText, setDisplayText] = useState('Claim available now');
+  const [detailText, setDetailText] = useState('');
 
   useEffect(() => {
-    // Default to 7 days from now if no date provided
-    const targetDate = nextClaimDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    const calculateTimeLeft = () => {
-      const difference = targetDate.getTime() - new Date().getTime();
-      
-      if (difference > 0) {
-        return {
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        };
+    const getTargetDate = () => {
+      if (!nextClaimAt) {
+        return null;
       }
-      
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+
+      return nextClaimAt instanceof Date ? nextClaimAt : new Date(nextClaimAt);
     };
 
-    setTimeLeft(calculateTimeLeft());
+    const formatMessage = () => {
+      if (pendingReview) {
+        setDisplayText('Review in progress');
+        setDetailText('Your reward is being checked and will land in your wallet after approval.');
+        return;
+      }
 
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
+      if (canClaim) {
+        setDisplayText('Claim available now');
+        setDetailText(claimMessage || 'Submit your weekly reward request when you are ready.');
+        return;
+      }
+
+      const targetDate = getTargetDate();
+
+      if (!targetDate || Number.isNaN(targetDate.getTime())) {
+        setDisplayText('Next claim soon');
+        setDetailText(claimMessage || 'Your next claim window will open soon.');
+        return;
+      }
+
+      const difference = targetDate.getTime() - Date.now();
+      if (difference <= 0) {
+        setDisplayText('Claim available now');
+        setDetailText(claimMessage || 'You can submit your weekly reward now.');
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const readableDate = targetDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+      if (days > 0) {
+        setDisplayText(`Next claim available in ${days} day${days === 1 ? '' : 's'}`);
+      } else if (hours > 0) {
+        setDisplayText(`Next claim available in ${hours} hour${hours === 1 ? '' : 's'}`);
+      } else {
+        setDisplayText(`Next claim available in ${minutes} minute${minutes === 1 ? '' : 's'}`);
+      }
+
+      setDetailText(`Claim resets on ${readableDate}`);
+    };
+
+    formatMessage();
+
+    const timer = setInterval(formatMessage, 60 * 1000);
 
     return () => clearInterval(timer);
-  }, [nextClaimDate]);
-
-  const TimeUnit = ({ value, label }: { value: number; label: string }) => (
-    <View style={styles.timeUnit}>
-      <Text style={styles.timeValue}>{value.toString().padStart(2, '0')}</Text>
-      <Text style={styles.timeLabel}>{label}</Text>
-    </View>
-  );
+  }, [canClaim, claimMessage, nextClaimAt, pendingReview]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Next claim in</Text>
-      <View style={styles.timeContainer}>
-        <TimeUnit value={timeLeft.days} label="Days" />
-        <Text style={styles.separator}>:</Text>
-        <TimeUnit value={timeLeft.hours} label="Hours" />
-        <Text style={styles.separator}>:</Text>
-        <TimeUnit value={timeLeft.minutes} label="Min" />
-        <Text style={styles.separator}>:</Text>
-        <TimeUnit value={timeLeft.seconds} label="Sec" />
+      <Text style={styles.label}>{displayText}</Text>
+      <View style={styles.detailPill}>
+        <Text style={styles.detailText}>{detailText}</Text>
       </View>
     </View>
   );
@@ -71,32 +95,25 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   label: {
-    color: '#7A869A',
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeUnit: {
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  timeValue: {
     color: Colors.dark.text,
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 10,
   },
-  timeLabel: {
-    color: '#7A869A',
-    fontSize: 12,
-    marginTop: 4,
+  detailPill: {
+    backgroundColor: 'rgba(126, 217, 87, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(126, 217, 87, 0.22)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    maxWidth: '100%',
   },
-  separator: {
+  detailText: {
     color: Colors.dark.accent,
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginHorizontal: 4,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

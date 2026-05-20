@@ -8,7 +8,12 @@ class ClaimAdmin(admin.ModelAdmin):
                   'approved_at', 'created_at']
     list_filter = ['status', 'week_number', 'year', 'created_at']
     search_fields = ['user__username']
-    readonly_fields = ['id', 'created_at', 'updated_at']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'approved_at']
+    list_editable = ['status']
+    ordering = ['-created_at']
+    list_per_page = 30
+    autocomplete_fields = ['user']
+    date_hierarchy = 'created_at'
     
     actions = ['approve_claims', 'reject_claims']
 
@@ -23,6 +28,6 @@ class ClaimAdmin(admin.ModelAdmin):
 
     def reject_claims(self, request, queryset):
         """Reject selected claims"""
-        count = queryset.update(status='rejected')
+        count = queryset.filter(status='pending').update(status='rejected')
         self.message_user(request, f"{count} claims rejected.")
     reject_claims.short_description = "Reject claims"

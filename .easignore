@@ -1,0 +1,12 @@
+# Exclude backend virtualenv and other large/unneeded dirs for EAS builds
+backend/venv/
+backend/.venv/
+**/__pycache__/
+*.pyc
+.env
+node_modules/
+.vscode/
+.DS_Store
+
+# If backend isn't required for app builds, exclude it entirely
+backend/

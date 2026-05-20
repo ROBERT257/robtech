@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { API_BASE_URL } from '@/services/api';
 
 export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const [username, setUsername] = useState('');
@@ -12,7 +13,7 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://127.0.0.1:8081/api/auth/login/', {
+      const res = await axios.post(`${API_BASE_URL}/auth/login/`, {
         username,
         password,
       });

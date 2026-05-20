@@ -38,10 +38,17 @@ def create_claim(request):
         week_number=week_number,
         year=year
     )
+
+    status_data = Claim.get_claim_status_summary(request.user)
     
     return Response({
-        'message': 'Claim request submitted successfully',
-        'claim': ClaimSerializer(claim).data
+        'message': 'Claim submitted successfully. Your reward is awaiting approval.',
+        'pending_message': 'Your reward is awaiting approval.',
+        'claim': ClaimSerializer(claim).data,
+        'claim_status': {
+            **status_data,
+            'current_claim': ClaimSerializer(status_data['current_claim']).data if status_data['current_claim'] else None,
+        }
     }, status=status.HTTP_201_CREATED)
 
 
@@ -49,23 +56,18 @@ def create_claim(request):
 @permission_classes([IsAuthenticated])
 def claim_status(request):
     """Check if user can claim this week"""
-    can_claim, message = Claim.can_claim(request.user)
-    
-    now = timezone.now()
-    week_number = now.isocalendar()[1]
-    year = now.year
-    
-    # Get current week's claim if exists
-    current_claim = Claim.objects.filter(
-        user=request.user,
-        week_number=week_number,
-        year=year
-    ).first()
+    status_data = Claim.get_claim_status_summary(request.user)
     
     return Response({
-        'can_claim': can_claim,
-        'message': message,
-        'current_claim': ClaimSerializer(current_claim).data if current_claim else None,
-        'week_number': week_number,
-        'year': year
+        'can_claim': status_data['can_claim'],
+        'message': status_data['message'],
+        'current_claim': ClaimSerializer(status_data['current_claim']).data if status_data['current_claim'] else None,
+        'week_number': timezone.now().isocalendar()[1],
+        'year': timezone.now().year,
+        'next_claim_at': status_data['next_claim_at'],
+        'claim_amount': status_data['claim_amount'],
+        'pending_review': status_data['pending_review'],
+        'estimated_review_time': status_data['estimated_review_time'],
+        'streak_count': status_data['streak_count'],
+        'claim_state': status_data['claim_state'],
     })
