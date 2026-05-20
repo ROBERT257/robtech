@@ -5,13 +5,13 @@ import { ClaimCountdown } from '@/components/ui/ClaimCountdown';
 import { ClaimHistory } from '@/components/ui/ClaimHistory';
 import { MarketList } from '@/components/ui/MarketList';
 import { Colors } from '@/constants/theme';
-import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL } from '@/services/api';
 import { fetchMarketData } from '@/services/coingecko';
 import { pingBackend } from '@/services/ping';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function HomeScreen() {
   const { token, user } = useAuth();

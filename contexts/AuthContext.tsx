@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
-import { onSessionExpired } from '../services/authEvents';
 import { authService } from '../services/auth';
+import { onSessionExpired } from '../services/authEvents';
 import { getItem } from '../utils/safeStorage';
 
 interface User {
