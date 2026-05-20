@@ -21,7 +21,7 @@ interface AuthContextType {
   isLoggingOut: boolean;
   sessionNotice: string | null;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string, referralCode?: string) => Promise<void>;
+  register: (username: string, email: string, password: string, phone?: string, referralCode?: string) => Promise<void>;
   logout: (navigation?: any, options?: { silent?: boolean; reason?: 'manual' | 'expired' }) => Promise<void>;
   refreshToken: () => Promise<void>;
 }
@@ -107,11 +107,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userInfo);
   };
 
-  const register = async (username: string, email: string, password: string, referralCode?: string) => {
+  const register = async (username: string, email: string, password: string, phone?: string, referralCode?: string) => {
     const response = await authService.register({
       username,
       email,
-      phone: '',
+      phone: phone || '',
       password,
       password2: password,
       referral_code: referralCode,

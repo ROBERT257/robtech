@@ -8,7 +8,9 @@ class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('completed', 'Completed'),
+        ('processing', 'Processing'),
         ('failed', 'Failed'),
+        ('timeout', 'Timeout'),
         ('cancelled', 'Cancelled'),
     ]
     
@@ -18,6 +20,9 @@ class Payment(models.Model):
     mpesa_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
     phone = models.CharField(max_length=15)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    attempts = models.IntegerField(default=0)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    audit_logs = models.JSONField(null=True, blank=True)
     merchant_request_id = models.CharField(max_length=100, null=True, blank=True)
     checkout_request_id = models.CharField(max_length=100, null=True, blank=True)
     callback_metadata = models.JSONField(null=True, blank=True)

@@ -145,8 +145,27 @@ MPESA_PASSKEY = config('MPESA_PASSKEY', default='')
 MPESA_SHORTCODE = config('MPESA_SHORTCODE', default='')
 MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='sandbox')  # sandbox or production
 
-# Registration fee
-REGISTRATION_FEE = 250  # KSH
+# Registration fee (enforced server-side for onboarding)
+REGISTRATION_FEE = config('REGISTRATION_FEE', default=300, cast=int)  # KSH
+
+# Optional credit to apply to wallet after successful registration (0 to disable)
+REGISTRATION_CREDIT = config('REGISTRATION_CREDIT', default=0, cast=int)
+
+# M-Pesa callback / security
+# Optional comma-separated list of IPs to accept callbacks from (safelist)
+MPESA_CALLBACK_IPS = config('MPESA_CALLBACK_IPS', default='', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
+# Maximum number of STK push attempts before failing
+MPESA_MAX_RETRIES = config('MPESA_MAX_RETRIES', default=3, cast=int)
+# STK push request timeout (minutes)
+MPESA_REQUEST_TIMEOUT_MINUTES = config('MPESA_REQUEST_TIMEOUT_MINUTES', default=10, cast=int)
+MPESA_CALLBACK_URL = config('MPESA_CALLBACK_URL', default='')
+
+# Rate limiting for payment initiation
+MPESA_RATE_LIMIT_SECONDS = config('MPESA_RATE_LIMIT_SECONDS', default=30, cast=int)
+MPESA_RATE_LIMIT_DAILY = config('MPESA_RATE_LIMIT_DAILY', default=20, cast=int)
+
+# Callback HMAC secret for verifying callbacks (set in env)
+MPESA_CALLBACK_SECRET = config('MPESA_CALLBACK_SECRET', default='')
 
 # Referral reward
 REFERRAL_REWARD = 150  # RT tokens

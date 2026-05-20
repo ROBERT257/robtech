@@ -5,6 +5,11 @@ from django.conf import settings
 from .models import Payment
 
 
+class MpesaConfigurationError(Exception):
+    """Raised when Daraja settings are missing or invalid."""
+    pass
+
+
 class MpesaService:
     """Service for M-Pesa Daraja API integration"""
     
@@ -14,6 +19,7 @@ class MpesaService:
         self.passkey = settings.MPESA_PASSKEY
         self.shortcode = settings.MPESA_SHORTCODE
         self.environment = settings.MPESA_ENVIRONMENT
+        self.callback_url = (getattr(settings, 'MPESA_CALLBACK_URL', '') or '').strip()
         
         if self.environment == 'sandbox':
             self.base_url = 'https://sandbox.safaricom.co.ke'
@@ -22,6 +28,29 @@ class MpesaService:
         
         self.access_token = None
         self.token_expiry = None
+
+    def validate_configuration(self):
+        missing = []
+        if not self.consumer_key:
+            missing.append('MPESA_CONSUMER_KEY')
+        if not self.consumer_secret:
+            missing.append('MPESA_CONSUMER_SECRET')
+        if not self.passkey:
+            missing.append('MPESA_PASSKEY')
+        if not self.shortcode:
+            missing.append('MPESA_SHORTCODE')
+        if not self.callback_url:
+            missing.append('MPESA_CALLBACK_URL')
+
+        if missing:
+            raise MpesaConfigurationError(
+                'Missing M-Pesa settings: ' + ', '.join(missing) + '. Set them in your backend environment before testing payments.'
+            )
+
+        if self.callback_url.startswith('http://127.0.0.1') or self.callback_url.startswith('http://localhost'):
+            raise MpesaConfigurationError(
+                'MPESA_CALLBACK_URL must be a public HTTPS URL for Safaricom to reach it. Use ngrok or a deployed HTTPS endpoint.'
+            )
 
     def get_access_token(self):
         """Generate and cache M-Pesa access token"""
@@ -49,6 +78,7 @@ class MpesaService:
 
     def initiate_stk_push(self, phone, amount, payment):
         """Initiate M-Pesa STK Push payment"""
+        self.validate_configuration()
         access_token = self.get_access_token()
         
         # Format phone number (remove leading 0, add 254)
@@ -78,7 +108,7 @@ class MpesaService:
             'PartyA': phone,
             'PartyB': self.shortcode,
             'PhoneNumber': phone,
-            'CallBackURL': f"{settings.ALLOWED_HOSTS[0]}/api/payments/callback/",
+            'CallBackURL': self.callback_url.rstrip('/') + '/api/payments/callback/',
             'AccountReference': f"Rotech-{payment.id}",
             'TransactionDesc': 'Rotech Registration Payment'
         }

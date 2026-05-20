@@ -1,11 +1,12 @@
 
 
-import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function WalletScreen() {
 
@@ -14,6 +15,7 @@ export default function WalletScreen() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     const fetchWallet = async () => {
@@ -45,6 +47,9 @@ export default function WalletScreen() {
           <Text style={styles.title}>Wallet</Text>
           <Text style={styles.balance}>{balance} RT</Text>
         </View>
+        <TouchableOpacity style={styles.activateBtn} onPress={() => router.push('/onboarding/welcome')}>
+          <Text style={{ color: '#001214', fontWeight: '700' }}>Activate KES 300</Text>
+        </TouchableOpacity>
       </View>
       {loading ? (
         <ActivityIndicator color="#fff" style={{ marginTop: 24 }} />
@@ -102,6 +107,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginTop: 2,
+  },
+  activateBtn: {
+    marginLeft: 'auto',
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignSelf: 'center',
   },
   section: {
     color: '#fff',

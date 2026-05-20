@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.db import IntegrityError, transaction
 
 User = get_user_model()
 
@@ -32,6 +33,15 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        username = attrs.get('username')
+        phone = attrs.get('phone')
+
+        if username and User.objects.filter(username=username).exists():
+            raise serializers.ValidationError({"username": "A user with this username already exists."})
+
+        if phone and User.objects.filter(phone=phone).exists():
+            raise serializers.ValidationError({"phone": "A user with this phone number already exists."})
         
         referral_code = attrs.get('referral_code')
         if referral_code:
@@ -47,26 +57,31 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         validated_data.pop('referral_code', None)
         password = validated_data.pop('password')
-        user = User.objects.create_user(**validated_data)
-        user.set_password(password)
-        user.generate_referral_code()
-        
-        # Give 150 RT as registration bonus
-        from decimal import Decimal
-        user.wallet_balance = Decimal('150')
-        user.save()
-        
-        # Create transaction record for registration bonus
-        from wallet.models import Transaction
-        Transaction.objects.create(
-            user=user,
-            amount=Decimal('150'),
-            transaction_type='adjustment',
-            description='Registration bonus',
-            balance_after=user.wallet_balance
-        )
-        
-        return user
+
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(**validated_data)
+                user.set_password(password)
+                user.generate_referral_code()
+
+                # Give 150 RT as registration bonus
+                from decimal import Decimal
+                user.wallet_balance = Decimal('150')
+                user.save()
+
+                # Create transaction record for registration bonus
+                from wallet.models import Transaction
+                Transaction.objects.create(
+                    user=user,
+                    amount=Decimal('150'),
+                    transaction_type='adjustment',
+                    description='Registration bonus',
+                    balance_after=user.wallet_balance
+                )
+
+                return user
+        except IntegrityError as exc:
+            raise serializers.ValidationError({"detail": "Registration failed because the account already exists or the supplied data is not unique."}) from exc
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
