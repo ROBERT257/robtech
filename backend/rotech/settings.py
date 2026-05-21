@@ -167,6 +167,9 @@ MPESA_RATE_LIMIT_DAILY = config('MPESA_RATE_LIMIT_DAILY', default=20, cast=int)
 # Callback HMAC secret for verifying callbacks (set in env)
 MPESA_CALLBACK_SECRET = config('MPESA_CALLBACK_SECRET', default='')
 
+# M-Pesa is the only supported payment provider.
+PAYMENT_PROVIDER = 'mpesa'
+
 # Referral reward
 REFERRAL_REWARD = 150  # RT tokens
 

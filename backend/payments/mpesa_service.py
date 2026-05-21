@@ -2,17 +2,17 @@ import requests
 import base64
 from datetime import datetime
 from django.conf import settings
-from .models import Payment
+from .models import Payment, MpesaCallback
 
 
 class MpesaConfigurationError(Exception):
-    """Raised when Daraja settings are missing or invalid."""
+    """Raised when payment settings are missing or invalid."""
     pass
 
 
 class MpesaService:
-    """Service for M-Pesa Daraja API integration"""
-    
+    """Service for M-Pesa Daraja API integration."""
+
     def __init__(self):
         self.consumer_key = settings.MPESA_CONSUMER_KEY
         self.consumer_secret = settings.MPESA_CONSUMER_SECRET
@@ -52,9 +52,18 @@ class MpesaService:
                 'MPESA_CALLBACK_URL must be a public HTTPS URL for Safaricom to reach it. Use ngrok or a deployed HTTPS endpoint.'
             )
 
+    @staticmethod
+    def _normalize_mpesa_phone(phone):
+        phone = str(phone).strip()
+        if phone.startswith('0'):
+            return '254' + phone[1:]
+        if phone.startswith('+'):
+            return phone[1:]
+        return phone
+
     def get_access_token(self):
         """Generate and cache M-Pesa access token"""
-        if self.access_token and self.token_expiry and datetime.now() < self.token_expiry:
+        if self.access_token and self.token_expiry and datetime.now().timestamp() < self.token_expiry:
             return self.access_token
         
         api_url = f"{self.base_url}/oauth/v1/generate?grant_type=client_credentials"
@@ -77,15 +86,11 @@ class MpesaService:
             raise Exception(f"Failed to get access token: {str(e)}")
 
     def initiate_stk_push(self, phone, amount, payment):
-        """Initiate M-Pesa STK Push payment"""
+        """Initiate an M-Pesa STK push."""
         self.validate_configuration()
         access_token = self.get_access_token()
         
-        # Format phone number (remove leading 0, add 254)
-        if phone.startswith('0'):
-            phone = '254' + phone[1:]
-        elif phone.startswith('+'):
-            phone = phone[1:]
+        phone = self._normalize_mpesa_phone(phone)
         
         api_url = f"{self.base_url}/mpesa/stkpush/v1/processrequest"
         
@@ -128,7 +133,7 @@ class MpesaService:
             raise Exception(f"STK Push failed: {str(e)}")
 
     def process_callback(self, callback_data):
-        """Process M-Pesa callback"""
+        """Process an M-Pesa callback."""
         try:
             body = callback_data.get('Body', {})
             stk_callback = body.get('stkCallback', {})
@@ -143,12 +148,23 @@ class MpesaService:
                 merchant_request_id=merchant_request_id,
                 checkout_request_id=checkout_request_id
             ).first()
+
+            if not payment and merchant_request_id:
+                payment = Payment.objects.filter(merchant_request_id=merchant_request_id).first()
+
+            if not payment and checkout_request_id:
+                payment = Payment.objects.filter(checkout_request_id=checkout_request_id).first()
             
             if not payment:
                 raise Exception("Payment not found")
+
+            if payment.expires_at and datetime.now().astimezone() > payment.expires_at.astimezone():
+                payment.status = 'timeout'
+                payment.audit_logs = (payment.audit_logs or []) + [{'ts': datetime.now().isoformat(), 'event': 'callback_after_timeout'}]
+                payment.save()
+                return payment
             
             # Save callback
-            from .models import MpesaCallback
             MpesaCallback.objects.create(
                 payment=payment,
                 body=callback_data
@@ -173,3 +189,4 @@ class MpesaService:
             return payment
         except Exception as e:
             raise Exception(f"Callback processing failed: {str(e)}")
+

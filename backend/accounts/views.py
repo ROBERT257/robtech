@@ -17,9 +17,26 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
+        # Lightweight debug logs to capture incoming payloads and validation errors
+        try:
+            print('DEBUG /api/auth/register payload:', request.data)
+        except Exception:
+            pass
+
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            try:
+                print('DEBUG /api/auth/register errors:', serializer.errors)
+            except Exception:
+                pass
+            return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
         user = serializer.save()
+        try:
+            print('DEBUG /api/auth/register success user_id:', user.id)
+        except Exception:
+            pass
+
         return Response({
             'user': UserSerializer(user).data,
             'message': 'Registration successful. Please complete payment to activate your account.'
@@ -35,6 +52,10 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
+        try:
+            print('DEBUG /api/auth/profile request by user:', getattr(self.request.user, 'id', None))
+        except Exception:
+            pass
         return self.request.user
 
 

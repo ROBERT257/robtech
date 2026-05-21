@@ -7,6 +7,7 @@ interface User {
   id: string;
   username: string;
   email: string;
+  phone?: string;
   referral_code?: string;
   wallet_balance?: number;
   is_registered?: boolean;
@@ -90,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: data.user?.id || '',
       username: data.user?.username || username,
       email: data.user?.email || '',
+      phone: data.user?.phone || '',
       referral_code: data.user?.referral_code,
       wallet_balance: data.user?.wallet_balance || 0,
       is_registered: Boolean((data.user as any)?.is_registered),
@@ -108,13 +110,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (username: string, email: string, password: string, phone?: string, referralCode?: string) => {
+    const normalizedPhone = typeof phone === 'string' ? phone.trim() : undefined;
+    const normalizedReferralCode = typeof referralCode === 'string' ? referralCode.trim() : undefined;
+
     const response = await authService.register({
       username,
       email,
-      phone: phone || '',
+      phone: normalizedPhone || null,
       password,
       password2: password,
-      referral_code: referralCode,
+      referral_code: normalizedReferralCode || undefined,
     });
 
     if (!response) {

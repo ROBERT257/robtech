@@ -40,6 +40,7 @@ Update the following variables:
 - `SECRET_KEY`: Django secret key
 - Database credentials
 - M-Pesa API credentials
+- `MPESA_CALLBACK_URL`: public HTTPS URL for the callback endpoint, for example `https://your-domain.com/api/payments/callback/`
 
 If you want the mobile app to work outside your LAN, also configure these for your public backend host:
 
@@ -93,9 +94,9 @@ python manage.py runserver 0.0.0.0:8081
 
 ### Payments
 
-- `POST /api/payments/initiate/` - Initiate M-Pesa STK Push payment
+- `POST /api/payments/initiate/` - Initiate a payment prompt using the configured provider
 - `GET /api/payments/list/` - List user's payments
-- `POST /api/payments/callback/` - M-Pesa callback endpoint
+- `POST /api/payments/callback/` - Payment callback endpoint
 - `GET /api/payments/status/<payment_id>/` - Check payment status
 
 ### Referrals
@@ -158,6 +159,9 @@ http://127.0.0.1:8081/admin/
 1. Get credentials from [Safaricom Developer Portal](https://developer.safaricom.co.ke)
 2. Update environment variables with your credentials
 3. Set `MPESA_ENVIRONMENT` to `sandbox` for testing or `production` for live
+4. Set `MPESA_CALLBACK_URL` to a public HTTPS endpoint that points to `/api/payments/callback/`
+
+For local development, use a tunnel such as ngrok so Safaricom can reach your callback URL.
 
 ### Payment Flow
 

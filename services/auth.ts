@@ -20,7 +20,7 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   username: string;
   email: string;
-  phone: string;
+  phone?: string | null;
   password: string;
   password2: string;
   referral_code?: string;
@@ -33,8 +33,11 @@ export interface AuthResponse {
     id: string;
     username: string;
     email: string;
+    phone?: string;
     referral_code?: string;
     wallet_balance?: number;
+    is_registered?: boolean;
+    is_verified?: boolean;
   };
 }
 
@@ -45,6 +48,57 @@ export interface AuthSessionPayload {
 }
 
 const AUTH_ENDPOINT = '/auth';
+
+function extractErrorMessage(error: any, fallback: string): string {
+  const data = error?.response?.data;
+  if (!data) {
+    return fallback;
+  }
+
+  const firstEntryMessage = (value: unknown): string | null => {
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      const first = value[0];
+      if (typeof first === 'string' && first.trim()) {
+        return first;
+      }
+    }
+    return null;
+  };
+
+  const directMessage =
+    firstEntryMessage(data?.detail) ||
+    firstEntryMessage(data?.message) ||
+    firstEntryMessage(data?.non_field_errors);
+  if (directMessage) {
+    return directMessage;
+  }
+
+  const errors = data?.errors;
+  if (errors && typeof errors === 'object') {
+    const values = Object.values(errors as Record<string, unknown>);
+    for (const value of values) {
+      const message = firstEntryMessage(value);
+      if (message) {
+        return message;
+      }
+    }
+  }
+
+  if (typeof data === 'object') {
+    const values = Object.values(data as Record<string, unknown>);
+    for (const value of values) {
+      const message = firstEntryMessage(value);
+      if (message) {
+        return message;
+      }
+    }
+  }
+
+  return fallback;
+}
 
 async function persistAuthSession({ accessToken, refreshToken, user }: AuthSessionPayload) {
   await setItem(AUTH_STORAGE_KEYS.accessToken, accessToken);
@@ -71,13 +125,21 @@ async function getStoredRefreshToken() {
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post(`${AUTH_ENDPOINT}/login/`, credentials);
-    return response.data;
+    try {
+      const response = await api.post(`${AUTH_ENDPOINT}/login/`, credentials);
+      return response.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Login failed'));
+    }
   },
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    const response = await api.post(`${AUTH_ENDPOINT}/register/`, credentials);
-    return response.data;
+    try {
+      const response = await api.post(`${AUTH_ENDPOINT}/register/`, credentials);
+      return response.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Registration failed'));
+    }
   },
 
   async refreshToken(refreshToken?: string | null): Promise<{ access: string; refresh?: string }> {

@@ -36,6 +36,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         username = attrs.get('username')
         phone = attrs.get('phone')
+        if isinstance(phone, str):
+            phone = phone.strip()
+        if not phone:
+            phone = None
+        attrs['phone'] = phone
 
         if username and User.objects.filter(username=username).exists():
             raise serializers.ValidationError({"username": "A user with this username already exists."})
@@ -44,12 +49,16 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"phone": "A user with this phone number already exists."})
         
         referral_code = attrs.get('referral_code')
+        if isinstance(referral_code, str):
+            referral_code = referral_code.strip()
         if referral_code:
             try:
                 referrer = User.objects.get(referral_code=referral_code)
                 attrs['referred_by'] = referrer
             except User.DoesNotExist:
                 raise serializers.ValidationError({"referral_code": "Invalid referral code."})
+        else:
+            attrs['referral_code'] = None
         
         return attrs
 
@@ -85,6 +94,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['user'] = UserSerializer(self.user).data
+        return data
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)

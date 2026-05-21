@@ -21,6 +21,12 @@ class InitiatePaymentView(generics.CreateAPIView):
     serializer_class = InitiatePaymentSerializer
 
     def create(self, request, *args, **kwargs):
+        # Debug: log incoming payload for diagnostics
+        try:
+            print('DEBUG /api/payments/initiate payload:', request.data)
+        except Exception:
+            pass
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data.get('phone')
@@ -187,49 +193,25 @@ def retry_payment(request, payment_id):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def mpesa_callback(request):
-    """Handle M-Pesa callback"""
+    """Handle payment callbacks from the configured provider."""
     try:
-        # basic callback IP verification when configured
-        allowed_ips = getattr(settings, 'MPESA_CALLBACK_IPS', []) or []
-        remote_addr = request.META.get('REMOTE_ADDR') or request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
-        if allowed_ips:
-            if not remote_addr or remote_addr not in allowed_ips:
+        mpesa_service = MpesaService()
+
+        if getattr(settings, 'PAYMENT_PROVIDER', '').strip().lower() == 'mpesa':
+            allowed_ips = getattr(settings, 'MPESA_CALLBACK_IPS', []) or []
+            remote_addr = request.META.get('REMOTE_ADDR') or request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+            if allowed_ips and (not remote_addr or remote_addr not in allowed_ips):
                 return Response({'ResultCode': 1, 'ResultDesc': 'Callback IP not allowed', 'remote_addr': remote_addr}, status=status.HTTP_403_FORBIDDEN)
 
-        # HMAC signature verification when secret configured
-        callback_secret = getattr(settings, 'MPESA_CALLBACK_SECRET', '')
-        if callback_secret:
-            raw = request.body or b''
-            signature_header = request.META.get('HTTP_X_MPESA_SIGNATURE') or request.META.get('HTTP_X_MPESA_SIGNATURE'.lower()) or request.META.get('X-Mpesa-Signature')
-            if not signature_header:
-                return Response({'ResultCode': 1, 'ResultDesc': 'Missing signature header'}, status=status.HTTP_403_FORBIDDEN)
-            computed = hmac.new(callback_secret.encode(), raw, hashlib.sha256).hexdigest()
-            if not hmac.compare_digest(computed, signature_header):
-                return Response({'ResultCode': 1, 'ResultDesc': 'Invalid callback signature'}, status=status.HTTP_403_FORBIDDEN)
-
-        mpesa_service = MpesaService()
-        # ensure required fields exist
-        body = request.data.get('Body', {})
-        stk_callback = body.get('stkCallback', {})
-        merchant_request_id = stk_callback.get('MerchantRequestID')
-        checkout_request_id = stk_callback.get('CheckoutRequestID')
-        if not merchant_request_id and not checkout_request_id:
-            return Response({'ResultCode': 1, 'ResultDesc': 'Callback missing identifiers'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Find payment
-        payment = Payment.objects.filter(merchant_request_id=merchant_request_id).first() or Payment.objects.filter(checkout_request_id=checkout_request_id).first()
-        if not payment:
-            return Response({'ResultCode': 1, 'ResultDesc': 'Payment not found for callback'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Check for timeout
-        now = timezone.now()
-        if payment.expires_at and now > payment.expires_at:
-            payment.status = 'timeout'
-            logs = payment.audit_logs or []
-            logs.append({'ts': now.isoformat(), 'event': 'callback_after_timeout'})
-            payment.audit_logs = logs
-            payment.save()
-            return Response({'ResultCode': 1, 'ResultDesc': 'Payment timed out'}, status=status.HTTP_410_GONE)
+            callback_secret = getattr(settings, 'MPESA_CALLBACK_SECRET', '')
+            if callback_secret:
+                raw = request.body or b''
+                signature_header = request.META.get('HTTP_X_MPESA_SIGNATURE') or request.META.get('HTTP_X_MPESA_SIGNATURE'.lower()) or request.META.get('X-Mpesa-Signature')
+                if not signature_header:
+                    return Response({'ResultCode': 1, 'ResultDesc': 'Missing signature header'}, status=status.HTTP_403_FORBIDDEN)
+                computed = hmac.new(callback_secret.encode(), raw, hashlib.sha256).hexdigest()
+                if not hmac.compare_digest(computed, signature_header):
+                    return Response({'ResultCode': 1, 'ResultDesc': 'Invalid callback signature'}, status=status.HTTP_403_FORBIDDEN)
 
         # Delegate processing to service (keeps logic centralized)
         payment = mpesa_service.process_callback(request.data)
