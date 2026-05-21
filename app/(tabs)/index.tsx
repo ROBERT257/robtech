@@ -84,7 +84,7 @@ export default function HomeScreen() {
         return;
       }
       try {
-        const res = await axios.get(`${API_BASE_URL}/claims/list/`, {
+        const res = await axios.get(`${API_BASE_URL}/claims/history/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Claim history response:', res.data);
@@ -158,7 +158,7 @@ export default function HomeScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setClaimStatus(statusRes.data);
-      const histRes = await axios.get(`${API_BASE_URL}/claims/list/`, {
+      const histRes = await axios.get(`${API_BASE_URL}/claims/history/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const histData = histRes.data;
